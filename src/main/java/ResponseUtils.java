@@ -64,4 +64,12 @@ public class ResponseUtils {
                 .readValue(jsonBody, clazz);
     }
 
+    public static <T> T unmarshallGeneric(CloseableHttpResponse response, Class<T> clazz) throws IOException {
+
+        String jsonBody = EntityUtils.toString(response.getEntity());
+        System.out.println(jsonBody);
+        return  new ObjectMapper()
+                .configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false)
+                .readValue(jsonBody, clazz);
+    }
 }

@@ -1,3 +1,5 @@
+import entities.NotFound;
+import entities.RateLimit;
 import main.java.ResponseUtils;
 import main.java.entities.User;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -13,20 +15,7 @@ import java.io.IOException;
 
 public class BodyTestWithJackson extends BaseClass{
 
-    CloseableHttpClient client ;
-    CloseableHttpResponse response ;
 
-    @BeforeMethod
-    public void setUp() {
-        client = HttpClientBuilder.create().build();
-    }
-
-    @AfterMethod
-    public void closeResources() throws IOException {
-        client = HttpClientBuilder.create().build();
-        client.close();
-        response.close();
-    }
 
     @Test
     public void returnsCorrectLogin() throws IOException {
@@ -47,11 +36,34 @@ public class BodyTestWithJackson extends BaseClass{
 
         response = client.execute(get);
 
-        User user = ResponseUtils.unmarshall(response, User.class);
+        User user = ResponseUtils.unmarshallGeneric(response, User.class);
 
         Assert.assertEquals(user.getId(), 11834443);
     }
 
+    @Test //(enabled = false)
+    public void notFoundMessageIsCorrect() throws IOException {
 
+        HttpGet get = new HttpGet(BASE_ENDPOINT + "/users/nonexistingendpoint");
+
+        response = client.execute(get);
+
+        NotFound notFoundMessage = ResponseUtils.unmarshallGeneric(response, NotFound.class);
+
+        Assert.assertEquals(notFoundMessage.getMessage(), "Not Found");
+    }
+
+    @Test //(enabled = false)
+    public void correctRateLimitsAreSet() throws IOException {
+
+        HttpGet get = new HttpGet(BASE_ENDPOINT + "/rate_limit");
+
+        response = client.execute(get);
+
+        RateLimit rateLimit = ResponseUtils.unmarshallGeneric(response, RateLimit.class);
+
+        Assert.assertEquals(rateLimit.getCoreLimit(),60);
+        Assert.assertEquals(rateLimit.getSearchLimit(),"10");
+    }
 
 }
